@@ -2,10 +2,9 @@ package com.example.demo.controller;
 
 import static org.springframework.http.ResponseEntity.ok;
 
-import brave.Tracer;
-import brave.baggage.BaggageField;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,10 +26,9 @@ public class AddressController {
   public Mono<ResponseEntity<Map<String, String>>> addressRetrieve(@PathVariable String addressId) {
     log.info("enter addressRetrieve():: {}", addressId);
 
-    return Mono.just(tracer.currentSpan()).map(currentSpan -> {
-      String customerName = BaggageField.create("Customer-Name").getValue(currentSpan.context());
-      log.info("Customer-Name={}", customerName);
-      return customerName;
+    return Mono.just(tracer.getAllBaggage()).map(allBaggage -> {
+      log.info("allBaggage {}", allBaggage);
+      return allBaggage.get("Customer-Name") == null ? "" : allBaggage.get("Customer-Name");
     }).map(customerName -> ok(Map.of("customerName", customerName))).doOnSuccess(r -> log.info("exit addressSearch()", r));
 
   }
